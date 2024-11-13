@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -32,4 +33,5 @@ var (
 	ErrMissingUserId   = NewError("MISSING_USER_ID", "El ID de usuario es requerido", http.StatusBadRequest)
 	ErrMissingCourseId = NewError("MISSING_COURSE_ID", "El ID del curso es requerido", http.StatusBadRequest)
 	ErrNoResults       = NewError("NO_RESULTS", "No se encontraron resultados", http.StatusNotFound)
+	ErrInvalidUserId   = errors.New("id de usuario inválido")
 )

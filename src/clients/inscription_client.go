@@ -73,12 +73,20 @@ func (r *gormInscriptionRepository) GetStudentsInCourse(ctx context.Context, cou
 }
 
 func (r *gormInscriptionRepository) IsEnrolled(ctx context.Context, courseId string, userId string) (bool, error) {
+	if userId == "" {
+		r.logger.Error("[INSCRIPTION-API] ID de usuario vacío")
+		return false, errors.ErrInvalidUserId
+	}
+
 	var count int64
 	if err := r.db.WithContext(ctx).
 		Model(&models.Inscripto{}).
 		Where("course_id = ? AND user_id = ?", courseId, userId).
 		Count(&count).Error; err != nil {
-		r.logger.Error("[INSCRIPTION-API] Error al verificar si el usuario está inscrito", zap.String("user_id", userId), zap.String("course_id", courseId), zap.Error(err))
+		r.logger.Error("[INSCRIPTION-API] Error al verificar si el usuario está inscrito",
+			zap.String("user_id", userId),
+			zap.String("course_id", courseId),
+			zap.Error(err))
 		return false, errors.ErrInternalServer
 	}
 	enrolled := count > 0
