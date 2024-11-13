@@ -10,7 +10,7 @@ import (
 )
 
 type InscriptionRepository interface {
-	Create(ctx context.Context, inscription *models.Inscripto) error
+	Create(ctx context.Context, inscription *models.Inscripto) (models.Inscripto, error)
 	GetMyCourses(ctx context.Context, userId string) ([]string, error)
 	GetStudentsInCourse(ctx context.Context, courseId string) ([]string, error)
 	IsEnrolled(ctx context.Context, courseId string, userId string) (bool, error)
@@ -28,12 +28,12 @@ func NewGormInscriptionRepository(db *gorm.DB, logger *zap.Logger) InscriptionRe
 	}
 }
 
-func (r *gormInscriptionRepository) Create(ctx context.Context, inscription *models.Inscripto) error {
+func (r *gormInscriptionRepository) Create(ctx context.Context, inscription *models.Inscripto) (models.Inscripto, error) {
 	if err := r.db.WithContext(ctx).Create(inscription).Error; err != nil {
 		r.logger.Error("[INSCRIPTION-API] Error al crear inscripción en la base de datos", zap.Error(err))
-		return errors.ErrInternalServer
+		return models.Inscripto{}, errors.ErrInternalServer
 	}
-	return nil
+	return *inscription, nil
 }
 
 func (r *gormInscriptionRepository) GetMyCourses(ctx context.Context, userId string) ([]string, error) {

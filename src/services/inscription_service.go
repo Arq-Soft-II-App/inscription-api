@@ -11,7 +11,7 @@ import (
 )
 
 type InscriptionService interface {
-	EnrollStudent(ctx context.Context, courseId string, userId string) error
+	EnrollStudent(ctx context.Context, courseId string, userId string) (dto.EnrollRequestResponseDto, error)
 	GetMyCourses(ctx context.Context, userId string) (dto.MyCourses, error)
 	GetStudentsInCourse(ctx context.Context, courseId string) (dto.StudentsInCourse, error)
 	IsEnrolled(ctx context.Context, courseId string, userId string) (bool, error)
@@ -26,21 +26,28 @@ func NewInscriptionService(repo clients.InscriptionRepository, logger *zap.Logge
 	return &inscriptionService{repo: repo, logger: logger}
 }
 
-func (s *inscriptionService) EnrollStudent(ctx context.Context, courseId string, userId string) error {
+func (s *inscriptionService) EnrollStudent(ctx context.Context, courseId string, userId string) (dto.EnrollRequestResponseDto, error) {
 	enrolled, err := s.IsEnrolled(ctx, courseId, userId)
 	if err != nil {
-		return err
+		return dto.EnrollRequestResponseDto{}, err
 	}
 	if enrolled {
 		s.logger.Warn("[INSCRIPTION-API] El estudiante ya está inscrito", zap.String("user_id", userId), zap.String("course_id", courseId))
-		return errors.ErrDuplicateEnroll
+		return dto.EnrollRequestResponseDto{}, errors.ErrDuplicateEnroll
 	}
 
 	inscription := &models.Inscripto{
 		CourseId: courseId,
 		UserId:   userId,
 	}
-	return s.repo.Create(ctx, inscription)
+	Inscription, err := s.repo.Create(ctx, inscription)
+	if err != nil {
+		return dto.EnrollRequestResponseDto{}, err
+	}
+	return dto.EnrollRequestResponseDto{
+		CourseId: Inscription.CourseId,
+		UserId:   Inscription.UserId,
+	}, nil
 }
 
 func (s *inscriptionService) GetMyCourses(ctx context.Context, userId string) (dto.MyCourses, error) {

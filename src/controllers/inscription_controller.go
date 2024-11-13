@@ -28,7 +28,8 @@ func (ic *InscriptionController) EnrollStudent(c *gin.Context) {
 		return
 	}
 
-	if err := ic.service.EnrollStudent(c.Request.Context(), enrollRequest.CourseId, enrollRequest.UserId); err != nil {
+	createdInscription, err := ic.service.EnrollStudent(c.Request.Context(), enrollRequest.CourseId, enrollRequest.UserId)
+	if err != nil {
 		if appErr, ok := err.(*errors.Error); ok {
 			c.JSON(appErr.HTTPStatusCode, gin.H{"error": appErr.Error()})
 			return
@@ -38,7 +39,7 @@ func (ic *InscriptionController) EnrollStudent(c *gin.Context) {
 	}
 
 	ic.logger.Info("[INSCRIPTION-API] Estudiante inscrito exitosamente", zap.String("user_id", enrollRequest.UserId), zap.String("course_id", enrollRequest.CourseId))
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, createdInscription)
 }
 
 func (ic *InscriptionController) GetMyCourses(c *gin.Context) {
